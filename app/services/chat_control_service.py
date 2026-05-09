@@ -25,6 +25,13 @@ class ChatControlService:
         """Устанавливает режим Robin глобально."""
         await self._repository.update_settings(0, robin_mode=enabled)
 
+    async def get_global_fun_mode(self) -> bool:
+        settings = await self.get_status(0)
+        return bool(settings.get("fun_mode", False))
+
+    async def set_global_fun_mode(self, enabled: bool) -> None:
+        await self._repository.update_settings(0, fun_mode=enabled)
+
     async def get_global_language(self) -> str:
         """Получает глобальный язык системы."""
         settings = await self.get_status(0)  # ID 0 используется для глобальных настроек

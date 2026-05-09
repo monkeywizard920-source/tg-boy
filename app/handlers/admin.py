@@ -53,6 +53,18 @@ async def cmd_on(message: Message, chat_control: ChatControlService):
     await chat_control.set_enabled(target_id, is_enabled=True)
     await message.answer(f"✅ Бот включен в чате `{target_id}`", parse_mode="Markdown")
 
+@router.message(Command("fun"))
+async def cmd_fun(message: Message, chat_control: ChatControlService) -> None:
+    parts = (message.text or "").split()
+    if len(parts) != 2 or parts[1].lower() not in {"on", "off"}:
+        await message.answer("Использование: /fun on или /fun off")
+        return
+
+    enabled = parts[1].lower() == "on"
+    await chat_control.set_global_fun_mode(enabled)
+    status = "включен" if enabled else "выключен"
+    await message.answer(f"Fun mode {status} глобально.")
+
 @router.message(Command("status"))
 async def cmd_status(message: Message, chat_control: ChatControlService, settings: Settings):
     stats = await chat_control.get_system_wide_stats()

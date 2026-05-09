@@ -42,7 +42,8 @@ class MessageRepository:
                     chat_id INTEGER PRIMARY KEY,
                     is_enabled BOOLEAN DEFAULT 1,
                     language TEXT DEFAULT '1',
-                    robin_mode BOOLEAN DEFAULT 0
+                    robin_mode BOOLEAN DEFAULT 0,
+                    fun_mode BOOLEAN DEFAULT 0
                 )
                 """
             )
@@ -55,6 +56,10 @@ class MessageRepository:
             # Миграция: добавляем колонку robin_mode, если её нет
             try:
                 await db.execute("ALTER TABLE chat_settings ADD COLUMN robin_mode BOOLEAN DEFAULT 0")
+            except aiosqlite.OperationalError:
+                pass
+            try:
+                await db.execute("ALTER TABLE chat_settings ADD COLUMN fun_mode BOOLEAN DEFAULT 0")
             except aiosqlite.OperationalError:
                 pass
             await db.commit()
@@ -154,6 +159,8 @@ class MessageRepository:
                     data = dict(row)
                     # Принудительно приводим к bool, чтобы избежать проблем с NULL/None
                     data["is_enabled"] = bool(data.get("is_enabled", True))
+                    data["robin_mode"] = bool(data.get("robin_mode", False))
+                    data["fun_mode"] = bool(data.get("fun_mode", False))
                     return data
                 
                 # Возвращаем значения по умолчанию для нового чата
@@ -161,7 +168,8 @@ class MessageRepository:
                     "chat_id": chat_id,
                     "is_enabled": True,
                     "language": "1",
-                    "robin_mode": False
+                    "robin_mode": False,
+                    "fun_mode": False
                 }
 
     async def update_settings(self, chat_id: int, **kwargs) -> None:

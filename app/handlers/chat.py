@@ -13,6 +13,7 @@ from app.config import Settings
 from app.domain import StoredMessage
 from app.services.chat_control_service import ChatControlService
 from app.services.context_service import ContextService
+from app.services.fun_service import FunService
 from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
@@ -70,6 +71,7 @@ async def ask(
     context_service: ContextService,
     llm_service: LLMService,
     chat_control: ChatControlService,
+    fun_service: FunService,
     settings: Settings,
 ) -> None:
     await _remember_message(message, context_service, settings, bot)
@@ -85,7 +87,9 @@ async def ask(
         context_service=context_service,
         llm_service=llm_service,
         chat_control=chat_control,
+        fun_service=fun_service,
         settings=settings,
+        bot=bot,
     )
 
 @router.message(F.text | F.caption)
@@ -95,6 +99,7 @@ async def collect_and_maybe_answer(
     context_service: ContextService,
     llm_service: LLMService,
     chat_control: ChatControlService,
+    fun_service: FunService,
     settings: Settings,
 ) -> None:
     await _remember_message(message, context_service, settings, bot)
@@ -116,7 +121,9 @@ async def collect_and_maybe_answer(
         context_service=context_service,
         llm_service=llm_service,
         chat_control=chat_control,
+        fun_service=fun_service,
         settings=settings,
+        bot=bot,
     )
 
 async def _remember_message(
@@ -160,11 +167,18 @@ async def _answer_with_context(
     context_service: ContextService,
     llm_service: LLMService,
     chat_control: ChatControlService,
+    fun_service: FunService,
     settings: Settings,
+    bot: Bot,
 ) -> None:
     """Generates and sends answer to message."""
     if not message.from_user:
         return
+
+    if await chat_control.get_global_fun_mode():
+        handled = await fun_service.try_handle(bot=bot, message=message, question=question)
+        if handled:
+            return
     
     context = await context_service.build_context(message.chat.id)
     global_lang = await chat_control.get_global_language()
@@ -292,4 +306,3 @@ def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc)
-

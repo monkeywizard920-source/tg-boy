@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     max_context_chars: int = Field(default=12000, alias="MAX_CONTEXT_CHARS", ge=1)
     max_reply_chars: int = Field(default=4096, alias="MAX_REPLY_CHARS", ge=1)
     answer_on_every_message: bool = Field(default=False, alias="ANSWER_ON_EVERY_MESSAGE")
+    fun_trigger_chance: float = Field(default=0.5, alias="FUN_TRIGGER_CHANCE", ge=0.0, le=1.0)
+    fun_max_reply_chars: int = Field(default=1200, alias="FUN_MAX_REPLY_CHARS", ge=100)
     
     @field_validator("max_context_messages", mode="before")
     def validate_max_context_messages(cls, v):
